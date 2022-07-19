@@ -8,6 +8,7 @@ import com.gmail.kjander0.tankcity.Game;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
+		config.setWindowedMode(1200, 900);
 		config.setForegroundFPS(60);
 		config.setTitle("Tank City");
 		new Lwjgl3Application(new Game(), config);
