@@ -4,112 +4,70 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 
 public class Main extends ApplicationAdapter implements InputProcessor {
-	SpriteBatch batch;
-	Texture img;
-	Sprite tankSprite;
+	private GameWorld gameWorld;
 	
-	boolean turnLeft, turnRight;
-	Vector2 tankPos = new Vector2();
-	Vector2 tankVel = new Vector2();
-	float tankAngle = 0f;
-	float turnSpeed = 1f;
-	float lastDeltaV = 0f;
-	int tankGear = 0;
-	float tankSpeeds[] = {
-			0f,
-			32f,
-			64f,
-			80f,
-			100f,
-	};
-	float tankAccels[] = {
-			80f,
-			80f,
-			40f,
-			20f,
-			8f,
-	};
+	private TankPhysicsSystem tankPhysicsSystem;
+	private RenderSystem renderSystem;
 	
 	@Override
 	public void create () {
-		batch = new SpriteBatch();
-		img = new Texture("badlogic.jpg");
-		tankSprite = new Sprite(img);
-		tankSprite.setOriginCenter();
+		Assets.init();
+		
+		gameWorld = new GameWorld();
+		
+		tankPhysicsSystem = new TankPhysicsSystem();
+		renderSystem = new RenderSystem();
+
 		
 		Gdx.input.setInputProcessor(this);
-	}
-	
-	public void update(float dt) {
-		if (turnLeft) {
-			tankAngle += turnSpeed * dt;
-		}
-		if (turnRight) {
-			tankAngle -= turnSpeed * dt;
-		}
 		
-		/*
-		 * TODO
-		 * - should be moment when gear is disengaged, slowing down due to friction
-		 * - tank should turn slower when at speed
-		 */
-		var tankDir = new Vector2((float)Math.cos(tankAngle), (float)Math.sin(tankAngle));
-		var targetSpeed = tankSpeeds[tankGear];
-		var currentSpeed = tankVel.dot(tankDir);
-		var newSpeed = currentSpeed;
-		lastDeltaV = 0f;
-		if (currentSpeed < targetSpeed) {
-			newSpeed += tankAccels[tankGear] * dt;
-			newSpeed = Math.min(newSpeed, targetSpeed);
-		} else if (currentSpeed > targetSpeed) {
-			newSpeed -= tankAccels[tankGear] * dt;
-			newSpeed = Math.max(newSpeed, targetSpeed);
-
-		}
-		lastDeltaV = currentSpeed - newSpeed;
-
-		
-		tankVel.set(tankDir).scl(newSpeed);
-		tankPos.add(new Vector2(tankVel).scl(dt));
+		// initial resize of everything
+		this.resize(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 	}
 
 	@Override
 	public void render () {
-		var dt = Gdx.graphics.getDeltaTime();
-		update(dt);
-		ScreenUtils.clear(1, 0, 0, 1);
-		batch.begin();
-		var wiggle = (float)Math.random() * lastDeltaV / 30f;
-		tankSprite.setPosition(tankPos.x, tankPos.y);
-		tankSprite.setRotation((tankAngle + wiggle) * 180f / (float)Math.PI);
-		tankSprite.draw(batch);
-		batch.end();
+		gameWorld.deltaTime = Gdx.graphics.getDeltaTime();
+		
+		// TODO all systems have same interface, might as well chuck em in a list and just iterate through em
+		tankPhysicsSystem.update(gameWorld);
+		renderSystem.update(gameWorld);
 	}
 	
 	@Override
 	public void dispose () {
-		batch.dispose();
-		img.dispose();
+		Assets.dispose();
+		renderSystem.dispose();
+	}
+
+	@Override
+	public void resize(int width, int height) {
+		super.resize(width, height);
+		renderSystem.cam.setToOrtho(false, width, height);
 	}
 
 	@Override
 	public boolean keyDown(int keycode) {
+		// TODO tank input logic should be in a TankController system, etc
+		var tankComp = gameWorld.playerTank.tankPhysicsComp;
 		switch(keycode) {
 		case Input.Keys.W:
-			tankGear = Math.min(tankSpeeds.length-1, tankGear + 1);
+			tankComp.tankGear = Math.min(tankComp.tankSpeeds.length-1, tankComp.tankGear + 1);
 			break;
 		case Input.Keys.A:
-			turnLeft = true;
+			tankComp.turnLeft = true;
 			break;
 		case Input.Keys.D:
-			turnRight = true;
+			tankComp.turnRight = true;
 			break;
 		}
 		return true;
@@ -117,15 +75,16 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 
 	@Override
 	public boolean keyUp(int keycode) {
+		var tankComp = gameWorld.playerTank.tankPhysicsComp;
 		switch(keycode) {
 		case Input.Keys.S:
-			tankGear = Math.max(0, tankGear - 1);
+			tankComp.tankGear = Math.max(0, tankComp.tankGear - 1);
 			break;
 		case Input.Keys.A:
-			turnLeft = false;
+			tankComp.turnLeft = false;
 			break;
 		case Input.Keys.D:
-			turnRight = false;
+			tankComp.turnRight = false;
 			break;
 		}
 		return true;

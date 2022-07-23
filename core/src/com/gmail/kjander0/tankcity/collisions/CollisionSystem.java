@@ -1,4 +1,4 @@
-package com.gmail.kjander0.tankcity.physics;
+package com.gmail.kjander0.tankcity.collisions;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
