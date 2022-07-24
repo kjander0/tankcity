@@ -29,8 +29,8 @@ public class RenderSystem implements Disposable {
 				batch.begin();
 				var wiggle = (float)Math.random() * ent.tankPhysicsComp.lastDeltaV / 30f;
 				// TODO: probs don't need sprites, just use batch.draw() commands with textures and maybe batch.setTransformMatrix() to rotate etc
-				tankSprite.setPosition(ent.tankPhysicsComp.tankPos.x,  ent.tankPhysicsComp.tankPos.y);
-				tankSprite.setRotation((ent.tankPhysicsComp.tankAngle + wiggle) * 180f / (float)Math.PI);
+				tankSprite.setPosition(ent.pos.x,  ent.pos.y);
+				tankSprite.setRotation((ent.tankPhysicsComp.angle + wiggle) * 180f / (float)Math.PI);
 				tankSprite.draw(batch);
 				batch.end();
 			}

@@ -1,5 +1,6 @@
 package com.gmail.kjander0.tankcity;
 
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 
 /*
@@ -13,9 +14,8 @@ public class GameWorld {
 	public GameWorld() {
 		entities = new Array<Entity>();
 		
-
-		
 		playerTank = new Entity();
+		playerTank.pos = new Vector2(10, 10);
 		playerTank.tankPhysicsComp = new TankPhysicsComp();
 		entities.add(playerTank);
 	}

@@ -12,38 +12,44 @@ public class TankPhysicsSystem {
 		}
 	}
 	
-	public void moveTank(Entity tank, float dt) {
-		var tankComp = tank.tankPhysicsComp;
-		
-		if (tankComp.turnLeft) {
-			tankComp.tankAngle += tankComp.turnSpeed * dt;
-		}
-		if (tankComp.turnRight) {
-			tankComp.tankAngle -= tankComp.turnSpeed * dt;
-		}
-		
+	public void moveTank(Entity tank, float dt) { 
 		/*
 		 * TODO
+		 * - acceleration and top speed should drop off linearly so smaller cities can outrun bigger ones
+		 * - if cities are modeled as tanks with two sets of tracks, then left and right tracks can be accelerated in opposite directions when turning
+		 * 		and given difference in speed dv and wheel base b, angular velocity should be dv/b
 		 * - should be moment when gear is disengaged, slowing down due to friction
 		 * - tank should turn slower when at speed
 		 */
-		var tankDir = new Vector2((float)Math.cos(tankComp.tankAngle), (float)Math.sin(tankComp.tankAngle));
-		var targetSpeed = tankComp.tankSpeeds[tankComp.tankGear];
-		var currentSpeed = tankComp.tankVel.dot(tankDir);
+		
+		var baseSpeed = 100f;
+		var baseAccel = 100f;
+		var tankComp = tank.tankPhysicsComp;
+		
+		var targetAngularVel = 0f;
+		if (tankComp.turnLeft) {
+			targetAngularVel += baseSpeed * tankComp.speedMap[1];
+		}
+		if (tankComp.turnRight) {
+			targetAngularVel -= baseSpeed * tankComp.speedMap[1];
+		}
+		targetAngularVel /= tankComp.wheelBase;
+		tankComp.angle += targetAngularVel * dt;
+		
+		var targetSpeed = baseSpeed * tankComp.speedMap[tankComp.gear];
+		var tankDir = new Vector2((float)Math.cos(tankComp.angle), (float)Math.sin(tankComp.angle));
+		var currentSpeed = tankComp.vel.dot(tankDir);
 		var newSpeed = currentSpeed;
 		tankComp.lastDeltaV = 0f;
 		if (currentSpeed < targetSpeed) {
-			newSpeed += tankComp.tankAccels[tankComp.tankGear] * dt;
+			newSpeed += baseAccel * tankComp.accelMap[tankComp.gear] * dt;
 			newSpeed = Math.min(newSpeed, targetSpeed);
 		} else if (currentSpeed > targetSpeed) {
-			newSpeed -= tankComp.tankAccels[tankComp.tankGear] * dt;
-			newSpeed = Math.max(newSpeed, targetSpeed);
-
+			newSpeed -= baseAccel * tankComp.accelMap[tankComp.gear] * dt;
 		}
 		tankComp.lastDeltaV = currentSpeed - newSpeed;
-
 		
-		tankComp.tankVel.set(tankDir).scl(newSpeed);
-		tankComp.tankPos.add(new Vector2(tankComp.tankVel).scl(dt));
+		tankComp.vel.set(tankDir).scl(newSpeed);
+		tank.pos.add(new Vector2(tankComp.vel).scl(dt));
 	}
 }

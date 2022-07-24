@@ -61,7 +61,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 		var tankComp = gameWorld.playerTank.tankPhysicsComp;
 		switch(keycode) {
 		case Input.Keys.W:
-			tankComp.tankGear = Math.min(tankComp.tankSpeeds.length-1, tankComp.tankGear + 1);
+			tankComp.gear = Math.min(tankComp.speedMap.length-1, tankComp.gear + 1);
 			break;
 		case Input.Keys.A:
 			tankComp.turnLeft = true;
@@ -78,7 +78,7 @@ public class Main extends ApplicationAdapter implements InputProcessor {
 		var tankComp = gameWorld.playerTank.tankPhysicsComp;
 		switch(keycode) {
 		case Input.Keys.S:
-			tankComp.tankGear = Math.max(0, tankComp.tankGear - 1);
+			tankComp.gear = Math.max(0, tankComp.gear - 1);
 			break;
 		case Input.Keys.A:
 			tankComp.turnLeft = false;
